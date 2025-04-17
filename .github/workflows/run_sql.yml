@@ -1,0 +1,28 @@
+name: Execute SQL on changes
+
+on:
+  push:
+    paths:
+      - '**.sql'
+
+jobs:
+  run-sql:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install MySQL client
+        run: sudo apt-get update && sudo apt-get install -y mysql-client
+
+      - name: Run changed SQL scripts
+        run: |
+          for sql_file in $(git diff --name-only HEAD^ HEAD -- '*.sql'); do
+            echo "-> Executing $sql_file..."
+            mysql \
+              --user=rfamro \
+              --host=mysql-rfam-public.ebi.ac.uk \
+              --port=4497 \
+              --database=Rfam \
+              < "$sql_file"
+          done
